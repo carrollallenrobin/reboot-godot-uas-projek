@@ -1,7 +1,7 @@
 # =============================================================================
 # CI/CD — Deploy Web Build ke GitHub Pages
 # =============================================================================
-# Trigger: setelah release workflow push tag v*, ATAU manual dispatch
+# Trigger: push ke branch master, ATAU manual dispatch
 # Hasil: web build di-deploy ke GitHub Pages
 # Token: GITHUB_TOKEN bawaan (TIDAK pakai PAT pribadi)
 #
@@ -12,7 +12,7 @@ name: "🌐 Deploy Web to Pages"
 
 on:
   push:
-    tags: ["v*"]
+    branches: ["master"]
   workflow_dispatch:  # Allow manual trigger for debugging
 
 permissions:

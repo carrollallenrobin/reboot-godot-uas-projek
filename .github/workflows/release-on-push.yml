@@ -1,8 +1,10 @@
 # =============================================================================
-# CI/CD — Auto Release setiap push ke master
+# CI/CD — Release saat push tag v*
 # =============================================================================
-# Pipeline: headless tests → export builds → create tag + GitHub Release
-# Versi otomatis: v0.1.<RUN_NUMBER>
+# Trigger: push tag yang cocok dengan v* (contoh v1.2.3)
+# Pipeline: headless tests → export builds → GitHub Release pada tag tersebut
+# Versi: nama tag yang memicu workflow. Jangan buat / push tag baru di sini,
+# karena push tag v* akan menjalankan workflow ini lagi.
 # Token: GITHUB_TOKEN bawaan (TIDAK pakai PAT pribadi)
 # =============================================================================
 
@@ -10,13 +12,13 @@ name: "🚀 Auto Release on Push"
 
 on:
   push:
-    branches: ["master"]
+    tags: ["v*"]
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-on-push-master
+  group: release-on-tag
   cancel-in-progress: true
 
 env:
@@ -95,18 +97,12 @@ jobs:
           echo "✅ Web export done"
           ls -la build/web/
 
-      # ── Generate Version & Tag ─────────────────────────────────────
-      - name: "🏷️ Generate version tag"
+      # ── Use the tag that triggered this run ────────────────────────
+      - name: "🏷️ Use pushed version tag"
         run: |
-          VERSION="v0.1.${{ github.run_number }}"
+          VERSION="${{ github.ref_name }}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "📌 Version: $VERSION"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git tag -a "$VERSION" -m "Auto release $VERSION"
-          git push origin "$VERSION"
 
       # ── Create GitHub Release ──────────────────────────────────────
       - name: "🚀 Create GitHub Release"
@@ -120,7 +116,7 @@ jobs:
             | Info | Detail |
             |------|--------|
             | **Commit** | `${{ github.sha }}` |
-            | **Branch** | `master` |
+            | **Tag** | `${{ github.ref_name }}` |
             | **Timestamp** | `${{ github.event.head_commit.timestamp }}` |
             | **Workflow** | [Lihat run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
 
